@@ -42,37 +42,23 @@ echo "clip count: $CLIP_COUNT"
 if [ "$CLIP_COUNT" -eq 0 ]; then
     echo "No new clips since $STARTED_AT"
 else
-    echo "Found $CLIP_COUNT new clip(s) since $STARTED_AT"
-
-    # Post each clip
     echo "$CLIPS_JSON" | jq -c '.data[]' | while read -r clip; do
-        CLIP_ID=$(echo "$clip" | jq -r .id)
-        CLIP_TITLE=$(echo "$clip" | jq -r .title | sed 's/"/\\"/g')
-        CLIP_URL=$(echo "$clip" | jq -r .url)
-        CLIP_THUMB=$(echo "$clip" | jq -r .thumbnail_url)
-        CLIP_TIME=$(echo "$clip" | jq -r .created_at)
-        CLIP_AUTHOR=$(echo "$clip" | jq -r .broadcaster_name)
+        TIMESTAMP=$(echo "$clip" | jq -r .created_at)
 
-        # Send to Discord
-        curl -s -X POST "$DISCORD_WEBHOOK_URL" \
+        PAYLOAD=$(echo "$clip" | jq -nc --argjson c "$clip" --arg ts "$TIMESTAMP" '{
+      embeds: [{
+        title: $c.title,
+        url: $c.url,
+        author: { name: $c.broadcaster_name },
+        image: { url: $c.thumbnail_url },
+        timestamp: $ts
+      }]
+    }')
+
+        echo "$PAYLOAD" | curl -s -X POST "$DISCORD_WEBHOOK_URL" \
             -H "Content-Type: application/json" \
-            -d @- <<EOF
-{
-  "embeds": [
-    {
-      "title": "$CLIP_TITLE",
-      "url": "$CLIP_URL",
-      "author": {
-        "name": "$CLIP_AUTHOR"
-      },
-      "image": {
-        "url": "$CLIP_THUMB"
-      },
-      "timestamp": "$CLIP_TIME"
-    }
-  ]
-}
-EOF
-        echo "Posted clip: $CLIP_TITLE"
+            -d @-
+
+        echo "Posted clip: $(echo "$clip" | jq -r .title)"
     done
 fi
