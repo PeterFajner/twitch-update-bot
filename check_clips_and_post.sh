@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 # load secrets
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo "Loading environment variables from $SCRIPT_DIR"
@@ -36,8 +38,7 @@ CLIPS_JSON=$(curl -s -G "https://api.twitch.tv/helix/clips" \
     --data-urlencode "started_at=$STARTED_AT")
 CLIP_COUNT=$(echo "$CLIPS_JSON" | jq '.data | length')
 
-echo "clips: $CLIPS_JSON"
-echo "clip count: $CLIP_COUNT"
+echo "Clip count: $CLIP_COUNT"
 
 if [ "$CLIP_COUNT" -eq 0 ]; then
     echo "No new clips since $STARTED_AT"
