@@ -7,12 +7,13 @@ You'll need a Twitch application and a Discord webhook, fill in the secrets in `
 
 ```
 server {
-    listen 80;
-    server_name your-domain.com
-    location /twitch {
-        include fastcgi_params;
-        fastcgi_pass unix:/var/run/fcgiwrap.socket;
-        fastcgi_param SCRIPT_FILENAME /home/twitch/twitch-update-bot/streaming_subscription.sh
+    server_name your-domain.com;
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
 ```
