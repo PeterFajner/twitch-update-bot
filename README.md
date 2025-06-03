@@ -3,15 +3,7 @@
 cp .env.example .env
 ```
 
-You'll need a Twitch application and a Discord webhook, fill in the secrets in `.env`. To generate an EventSub secret, run `openssl rand -hex 32`.
-
-# Script to post new clips
-Setup `check_clips_and_post.sh` to run with a cron job (max 30 requests per minute).
-
-# Script to post when you start streaming
-
-1. Install fcgiwrap and nginx
-2. Setup a nginx server, replacing `your-domain.com` and the location of the script:
+You'll need a Twitch application and a Discord webhook, fill in the secrets in `.env`. Setup an HTTPS URL to be your EventSub incoming URL, and proxy nginx from that URL to LOCAL_PORT (default 3000):
 
 ```
 server {
@@ -24,6 +16,3 @@ server {
     }
 }
 ```
-
-3. Use certbot to setup HTTPS for your-domain.com
-4. Setup EventSub by running `register_eventsub.sh`
