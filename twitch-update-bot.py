@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 
 import aiohttp
 from apscheduler.schedulers.blocking import BlockingScheduler
-from celery import Celery
 from discord import Embed, Webhook
 from dotenv import load_dotenv
 from twitchAPI.eventsub.webhook import EventSubWebhook
