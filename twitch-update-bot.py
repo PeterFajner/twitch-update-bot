@@ -18,7 +18,8 @@ TWITCH_CLIENT_ID = os.getenv("TWITCH_CLIENT_ID")
 TWITCH_CLIENT_SECRET = os.getenv("TWITCH_CLIENT_SECRET")
 TWITCH_USERNAME = os.getenv("TWITCH_USERNAME")
 TWITCH_INBOUND_URL = os.getenv("TWITCH_INBOUND_URL")
-DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+DISCORD_STREAMS_WEBHOOK_URL = os.getenv("DISCORD_STREAMS_WEBHOOK_URL")
+DISCORD_CLIPS_WEBHOOK_URL = os.getenv("DISCORD_CLIPS_WEBHOOK_URL")
 LOCAL_PORT = int(os.getenv("LOCAL_PORT"))
 
 # current file's directory
@@ -35,7 +36,7 @@ with open(CACHE_FILE_PATH, "a+") as f:
 async def on_stream_start(data: StreamOnlineEvent):
     print(f"{data.event.broadcaster_user_name} is live!")
     async with aiohttp.ClientSession() as session:
-        webhook = Webhook.from_url(DISCORD_WEBHOOK_URL, session=session)
+        webhook = Webhook.from_url(bool(DISCORD_STREAMS_WEBHOOK_URL), session=session)
         await webhook.send(
             f"🔴 **{data.event.broadcaster_user_name} is live!**\nhttps://twitch.tv/{TWITCH_USERNAME}"
         )
@@ -43,6 +44,8 @@ async def on_stream_start(data: StreamOnlineEvent):
 
 # capture stream online events
 async def stream_listener(shutdown_event: asyncio.Event):
+    if not bool(bool(DISCORD_STREAMS_WEBHOOK_URL)):
+        return
     twitch = await Twitch(TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET)
     user = await first(twitch.get_users(logins=TWITCH_USERNAME))
     eventsub = EventSubWebhook(TWITCH_INBOUND_URL, LOCAL_PORT, twitch)
@@ -61,6 +64,8 @@ async def stream_listener(shutdown_event: asyncio.Event):
 
 ### CLIPS SECTION
 async def get_clips_loop(shutdown_event: asyncio.Event):
+    if not bool(DISCORD_CLIPS_WEBHOOK_URL):
+        return
     while not shutdown_event.is_set():
         try:
             await get_clips()
@@ -96,7 +101,7 @@ async def get_clips():
     # send new clips to discord
     async with aiohttp.ClientSession() as session:
         for clip in new_clips:
-            webhook = Webhook.from_url(DISCORD_WEBHOOK_URL, session=session)
+            webhook = Webhook.from_url(bool(DISCORD_CLIPS_WEBHOOK_URL), session=session)
             await webhook.send(
                 embed=Embed(
                     title=clip.title,
